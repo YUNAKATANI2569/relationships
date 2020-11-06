@@ -7,26 +7,28 @@ class User < ApplicationRecord
 
 
   # has_many :relationships,foreign_key:"follower_id"
-  has_many :follower, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy # フォロー取得
-  has_many :followed, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy # フォロワー取得
-  has_many :following_user, through: :follower, source: :followed # 自分がフォローしている人
-  has_many :follower_user, through: :followed, source: :follower # 自分をフォローしている人
 
-# ユーザーをフォローする
-def follow(user_id)
-  follower.create(followed_id: user_id)
+  has_many :reverse_of_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
 
-end
+  has_many :relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
 
-# ユーザーのフォローを外す
-def unfollow(user_id)
-  follower.find_by(followed_id: user_id).destroy
-end
+  has_many :followers, through: :reverse_of_relationships, source: :follower
 
-# フォローしていればtrueを返す
-def following?(user)
-  following_user.include?(user)
-end
+  has_many :followings, through: :relationships, source: :followed
+
+  def follow(user_id)
+    relationships.create(followed_id: user_id)
+  end
+
+  def unfollow(user_id)
+    relationships.find_by(followed_id: user_id).destroy
+  end
+
+  def following?(user)
+    followings.include?(user)
+  end
+
+
 
 
 
